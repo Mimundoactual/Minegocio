@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2F6B4F">
+<title>Mi Negocio — Control de stock y ventas</title>
+<style>
+  :root{
+    --bg:#F6F4EF;
+    --card:#FFFFFF;
+    --ink:#20241F;
+    --ink-soft:#5C6058;
+    --line:#E1DED4;
+    --accent:#2F6B4F;
+    --accent-ink:#F6F4EF;
+    --accent-soft:#E4EEE7;
+    --warn:#B4562B;
+    --warn-soft:#F6E7DC;
+    --danger:#B23A3A;
+    --radius:14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:76px;
+  }
+  header.topbar{
+    padding:18px 18px 14px;
+    border-bottom:1px solid var(--line);
+    background:var(--bg);
+    position:sticky;
+    top:0;
+    z-index:5;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header.topbar h1{
+    font-size:19px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header.topbar .role-pill{
+    font-size:12px;
+    padding:4px 10px;
+    border-radius:999px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-weight:600;
+  }
+  main{
+    flex:1;
+    padding:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .card h2{
+    font-size:15px;
+    margin:0 0 12px;
+    font-weight:700;
+  }
+  label{
+    display:block;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-weight:600;
+  }
+  input, select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#FCFBF8;
+    font-size:15px;
+    color:var(--ink);
+    margin-bottom:12px;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn{
+    width:100%;
+    padding:13px;
+    border-radius:10px;
+    border:none;
+    font-size:15px;
+    font-weight:700;
+    background:var(--accent);
+    color:var(--accent-ink);
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .btn.danger{
+    background:transparent;
+    color:var(--danger);
+    border:1px solid var(--danger);
+  }
+  .btn.small{
+    width:auto;
+    padding:8px 12px;
+    font-size:13px;
+  }
+  .row{
+    display:flex;
+    gap:10px;
+  }
+  .row > *{ flex:1; }
+  .list-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+    gap:10px;
+  }
+  .list-item:last-child{ border-bottom:none; }
+  .list-item .name{ font-weight:600; font-size:14.5px; }
+  .list-item .meta{ font-size:12.5px; color:var(--ink-soft); }
+  .qty-controls{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .qty-btn{
+    width:30px; height:30px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#FCFBF8;
+    font-size:16px;
+    font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .stat{
+    background:var(--accent-soft);
+    border-radius:12px;
+    padding:12px;
+  }
+  .stat .label{ font-size:12px; color:var(--accent); font-weight:600; }
+  .stat .value{ font-size:22px; font-weight:700; color:var(--ink); margin-top:2px; }
+  nav.tabbar{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    background:var(--card);
+    border-top:1px solid var(--line);
+    display:flex;
+    max-width:480px;
+    margin:0 auto;
+  }
+  nav.tabbar button{
+    flex:1;
+    background:none;
+    border:none;
+    padding:10px 4px 12px;
+    font-size:11.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+  }
+  nav.tabbar button.active{ color:var(--accent); }
+  nav.tabbar .icon{ font-size:19px; line-height:1; }
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    padding:20px 0;
+  }
+  .toast{
+    position:fixed;
+    bottom:90px; left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:13.5px;
+    font-weight:600;
+    z-index:20;
+    opacity:0;
+    transition:opacity .25s;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; }
+  .login-screen{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:24px;
+    max-width:420px;
+    margin:0 auto;
+  }
+  .login-screen h1{
+    font-size:24px;
+    margin:0 0 6px;
+  }
+  .login-screen p.sub{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin:0 0 26px;
+  }
+  .role-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .role-toggle button{
+    flex:1;
+    padding:11px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#FCFBF8;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .role-toggle button.active{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  .error-text{
+    color:var(--danger);
+    font-size:13px;
+    margin:-6px 0 12px;
+  }
+  .divider{
+    height:1px;
+    background:var(--line);
+    margin:16px 0;
+  }
+  .discount-badge{
+    display:inline-block;
+    background:var(--warn-soft);
+    color:var(--warn);
+    font-size:11.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .search-box{ position:relative; margin-bottom:12px; }
+  .cart-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    font-size:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .cart-line:last-child{ border-bottom:none; }
+  .total-line{
+    display:flex;
+    justify-content:space-between;
+    font-size:18px;
+    font-weight:700;
+    padding-top:12px;
+    margin-top:4px;
+    border-top:1px solid var(--line);
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-size:13px;
+    font-weight:600;
+    padding:6px 0;
+  }
+  .settings-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+  .scan-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .scan-row input{ margin-bottom:0; }
+  .btn.camera-btn{
+    width:auto;
+    white-space:nowrap;
+    padding:11px 14px;
+    font-size:14px;
+  }
+  .scanner-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(10,12,9,0.92);
+    z-index:50;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .scanner-box{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-radius:16px;
+    overflow:hidden;
+  }
+  .scanner-box video{
+    width:100%;
+    display:block;
+    background:#000;
+    max-height:60vh;
+    object-fit:cover;
+  }
+  .scanner-box .scanner-footer{
+    padding:14px 16px;
+  }
+  .scanner-status{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+    text-align:center;
+  }
+  .search-results{
+    margin-top:-4px;
+  }
+  .search-result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    gap:10px;
+  }
+  .search-result-row:last-child{ border-bottom:none; }
+  .search-result-row .name{ font-weight:600; font-size:14px; }
+  .search-result-row .meta{ font-size:12px; color:var(--ink-soft); }
+  .no-discount-badge{
+    display:inline-block;
+    background:var(--surface-1, #EDEBE2);
+    color:var(--ink-soft);
+    font-size:11px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:999px;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:-2px 0 12px;
+  }
+  .checkbox-row input[type="checkbox"]{
+    width:auto;
+    margin:0;
+  }
+  .checkbox-row label{
+    margin:0;
+    font-weight:500;
+    color:var(--ink);
+  }
+  .contact-icons{
+    display:flex;
+    gap:6px;
+  }
+  .icon-btn{
+    width:34px; height:34px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#FCFBF8;
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+  }
+  .promo-compose{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  .promo-compose textarea{
+    width:100%;
+    min-height:70px;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#FCFBF8;
+    font-size:14px;
+    font-family:inherit;
+    margin-bottom:10px;
+    resize:vertical;
+  }
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{
+      display:block;
+      position:absolute;
+      top:0; left:0;
+      width:100%;
+      padding:12px;
+      font-family:'Courier New', monospace;
+      color:#000;
+    }
+    #printArea h3{ text-align:center; margin:0 0 4px; }
+    #printArea p{ margin:2px 0; font-size:13px; }
+    #printArea table{ width:100%; border-collapse:collapse; margin:10px 0; font-size:12.5px; }
+    #printArea td{ padding:3px 0; }
+    #printArea .ticket-total{ font-weight:bold; font-size:15px; border-top:1px dashed #000; padding-top:6px; }
+    #printArea .ticket-divider{ border-top:1px dashed #000; margin:8px 0; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+const state = {
+  bizId: null,
+  bizEmail: null,
+  role: null, // 'owner' | 'employee'
+  tab: 'facturar',
+  products: [],
+  clients: [],
+  sales: [],
+  auth: { ownerPin: '1234', employeeCode: '0000' },
+  business: { name: 'Mi negocio', whatsapp: '', address: '', instagram: '', tiktok: '', facebook: '', website: '', qrTarget: '' },
+  cart: [],
+  selectedClientId: null,
+  productSearch: '',
+  lastSaleId: null,
+  promoSelectedIds: [],
+  loaded: false,
+};
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function money(n){ return '$' + Number(n||0).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+function normalizeEmail(email){
+  return (email || '').trim().toLowerCase();
+}
+
+function lsGet(key){
+  try{
+    return localStorage.getItem(key);
+  }catch(e){
+    return null;
+  }
+}
+function lsSet(key, value){
+  try{
+    localStorage.setItem(key, value);
+    return true;
+  }catch(e){
+    showToast('No se pudo guardar. Revisá el espacio de almacenamiento del navegador.');
+    return false;
+  }
+}
+
+function storageKey(name){
+  return 'biz:' + state.bizId + ':' + name;
+}
+
+async function businessExists(bizId){
+  return lsGet('biz:' + bizId + ':business') !== null;
+}
+
+async function loadAll(){
+  try{
+    const p = lsGet(storageKey('products'));
+    state.products = p ? JSON.parse(p) : [];
+  }catch(e){ state.products = []; }
+  try{
+    const c = lsGet(storageKey('clients'));
+    state.clients = c ? JSON.parse(c) : [];
+  }catch(e){ state.clients = []; }
+  try{
+    const s = lsGet(storageKey('sales'));
+    state.sales = s ? JSON.parse(s) : [];
+  }catch(e){ state.sales = []; }
+  try{
+    const a = lsGet(storageKey('auth'));
+    if(a) state.auth = JSON.parse(a);
+  }catch(e){}
+  try{
+    const biz = lsGet(storageKey('business'));
+    if(biz) state.business = JSON.parse(biz);
+  }catch(e){}
+  state.loaded = true;
+  document.title = (state.business.name || 'Mi negocio') + ' — Facturación';
+}
+
+async function saveProducts(){ lsSet(storageKey('products'), JSON.stringify(state.products)); }
+async function saveClients(){ lsSet(storageKey('clients'), JSON.stringify(state.clients)); }
+async function saveSales(){ lsSet(storageKey('sales'), JSON.stringify(state.sales)); }
+async function saveAuth(){ lsSet(storageKey('auth'), JSON.stringify(state.auth)); }
+async function saveBusiness(){ lsSet(storageKey('business'), JSON.stringify(state.business)); }
+
+function listAllBusinessIds(){
+  const ids = new Set();
+  try{
+    for(let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      const m = k && k.match(/^biz:(.+):business$/);
+      if(m) ids.add(m[1]);
+    }
+  }catch(e){}
+  return Array.from(ids);
+}
+
+function exportBusinessData(){
+  const data = {
+    exportedAt: new Date().toISOString(),
+    bizId: state.bizId,
+    business: state.business,
+    auth: state.auth,
+    products: state.products,
+    clients: state.clients,
+    sales: state.sales,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (state.business.name || 'negocio').replace(/[^a-z0-9]+/gi,'_') + '_backup.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importBusinessData(file){
+  const reader = new FileReader();
+  reader.onload = async (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.business || !data.auth){ showToast('El archivo no tiene el formato esperado'); return; }
+      state.business = data.business;
+      state.auth = data.auth;
+      state.products = data.products || [];
+      state.clients = data.clients || [];
+      state.sales = data.sales || [];
+      await saveBusiness();
+      await saveAuth();
+      await saveProducts();
+      await saveClients();
+      await saveSales();
+      showToast('Datos importados correctamente');
+      render();
+    }catch(err){
+      showToast('No se pudo leer el archivo. ¿Es un backup válido?');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function findProductByBarcode(code){
+  const clean = (code || '').trim();
+  if(!clean) return null;
+  return state.products.find(p => p.barcode && p.barcode === clean) || null;
+}
+
+function addProductToCart(prodId, qty){
+  qty = qty || 1;
+  const prod = state.products.find(p=>p.id===prodId);
+  if(!prod) return false;
+  const existing = state.cart.find(l=>l.productId===prodId);
+  const currentQtyInCart = existing ? existing.qty : 0;
+  if(currentQtyInCart + qty > prod.stock){
+    showToast('No hay suficiente stock de ' + prod.name);
+    return false;
+  }
+  if(existing) existing.qty += qty;
+  else state.cart.push({ productId: prodId, qty });
+  return true;
+}
+
+function todayStr(d){
+  const dt = d ? new Date(d) : new Date();
+  return dt.toISOString().slice(0,10);
+}
+function monthStr(d){
+  const dt = d ? new Date(d) : new Date();
+  return dt.toISOString().slice(0,7);
+}
+
+function daysUntilAnniversary(dateStr){
+  if(!dateStr) return null;
+  const today = new Date();
+  const d = new Date(dateStr + 'T00:00:00');
+  const next = new Date(today.getFullYear(), d.getMonth(), d.getDate());
+  next.setHours(0,0,0,0);
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if(next < todayMid) next.setFullYear(next.getFullYear() + 1);
+  return Math.round((next - todayMid) / (1000*60*60*24));
+}
+
+function getUpcomingSpecialDates(windowDays){
+  const results = [];
+  state.clients.forEach(c=>{
+    const bDays = daysUntilAnniversary(c.birthday);
+    if(bDays !== null && bDays <= windowDays){
+      results.push({ client: c, type: 'Cumpleaños', days: bDays });
+    }
+    const sDays = daysUntilAnniversary(c.specialDate);
+    if(sDays !== null && sDays <= windowDays){
+      results.push({ client: c, type: c.specialLabel || 'Fecha especial', days: sDays });
+    }
+  });
+  results.sort((a,b)=>a.days-b.days);
+  return results;
+}
+
+function birthdayMessage(client){
+  return `¡Hola ${client.name}! Desde ${state.business.name} te queremos saludar en tu día especial 🎉 Como regalo, tenés un descuento esperándote en tu próxima compra. ¡Te esperamos!`;
+}
+
+function cleanPhoneForWhatsapp(phone){
+  return (phone || '').replace(/[^0-9]/g, '');
+}
+
+function openWhatsappTo(phone, message){
+  const clean = cleanPhoneForWhatsapp(phone);
+  if(!clean){ showToast('Ese cliente no tiene teléfono cargado'); return; }
+  const url = 'https://wa.me/' + clean + '?text=' + encodeURIComponent(message || '');
+  window.open(url, '_blank');
+}
+
+function openEmailTo(email, subject, body){
+  if(!email){ showToast('Ese cliente no tiene email cargado'); return; }
+  const url = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject || '') + '&body=' + encodeURIComponent(body || '');
+  window.location.href = url;
+}
+
+function socialUrlFor(key){
+  return state.business[key] || '';
+}
+
+function printReceipt(sale){
+  if(!sale) return;
+  const client = state.clients.find(c=>c.id===sale.clientId);
+  const d = new Date(sale.date);
+  const rows = sale.items.map(i=>{
+    const lineTotal = i.unitPrice * i.qty * (1 - (i.discountPercent||0)/100);
+    return `<tr>
+      <td>${i.name}${i.discountPercent ? ' (-' + i.discountPercent + '%)' : ''}<br>×${i.qty}</td>
+      <td style="text-align:right;">${money(lineTotal)}</td>
+    </tr>`;
+  }).join('');
+
+  const socialLines = [];
+  if(state.business.instagram) socialLines.push('IG: ' + state.business.instagram.replace(/^https?:\/\//,''));
+  if(state.business.tiktok) socialLines.push('TikTok: ' + state.business.tiktok.replace(/^https?:\/\//,''));
+  if(state.business.facebook) socialLines.push('FB: ' + state.business.facebook.replace(/^https?:\/\//,''));
+  if(state.business.website) socialLines.push('Web: ' + state.business.website.replace(/^https?:\/\//,''));
+
+  let qrTargetUrl = '';
+  if(state.business.qrTarget === 'whatsapp' && state.business.whatsapp){
+    qrTargetUrl = 'https://wa.me/' + cleanPhoneForWhatsapp(state.business.whatsapp);
+  } else if(state.business.qrTarget){
+    qrTargetUrl = socialUrlFor(state.business.qrTarget);
+  }
+  const qrImg = qrTargetUrl
+    ? `<div style="text-align:center; margin:10px 0;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrTargetUrl)}" width="140" height="140"></div>`
+    : '';
+
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = `
+    <h3>${state.business.name || 'Mi negocio'}</h3>
+    ${state.business.address ? `<p style="text-align:center;">${state.business.address}</p>` : ''}
+    <p style="text-align:center;">${d.toLocaleDateString('es-AR')} ${d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}</p>
+    ${client ? `<p>Cliente: ${client.name} ${client.lastname}</p>` : ''}
+    <div class="ticket-divider"></div>
+    <table>${rows}</table>
+    <div class="ticket-total">
+      <table><tr><td>Total</td><td style="text-align:right;">${money(sale.total)}</td></tr></table>
+    </div>
+    <div class="ticket-divider"></div>
+    <p style="text-align:center;">¡Gracias por tu compra!</p>
+    ${state.business.whatsapp ? `<p style="text-align:center;">Contacto: ${state.business.whatsapp}</p>` : ''}
+    ${socialLines.length ? `<p style="text-align:center;">${socialLines.join(' · ')}</p>` : ''}
+    ${qrImg}
+    ${qrImg ? '<p style="text-align:center; font-size:11px;">Escaneá para seguirnos</p>' : ''}
+  `;
+  window.print();
+}
+
+function render(){
+  const app = document.getElementById('app');
+  if(!state.bizId){
+    renderBizGate(app);
+    return;
+  }
+  if(!state.loaded){
+    app.innerHTML = '<div class="login-screen"><p class="sub">Cargando...</p></div>';
+    return;
+  }
+  if(!state.role){
+    renderLogin(app);
+    return;
+  }
+  renderMain(app);
+}
+
+let bizGateStage = 'email'; // 'email' | 'checking' | 'newBiz'
+let bizGateError = '';
+
+function renderBizGate(app){
+  if(bizGateStage === 'email'){
+    app.innerHTML = `
+      <div class="login-screen">
+        <h1>Tu negocio</h1>
+        <p class="sub">Ingresá el email con el que administrás tu negocio. Cada email tiene su propio stock, clientes y ventas — así podés usar esta misma app para varios negocios distintos.</p>
+        <label>Email del negocio</label>
+        <input id="bizEmailInput" type="email" placeholder="tunegocio@ejemplo.com">
+        <div class="error-text" id="bizEmailError" style="display:${bizGateError ? 'block' : 'none'};">${bizGateError}</div>
+        <button class="btn" id="bizEmailBtn">Continuar</button>
+        <p class="settings-note" style="margin-top:16px;">
+          Esto no es un login con contraseña real ni te manda ningún correo: el email solo se usa como identificador para separar los datos de cada negocio dentro de la app. Cualquiera que escriba el mismo email accede a ese negocio, así que no compartas el email de un negocio que querés mantener privado — usá el código de dueño/empleado del paso siguiente para eso.
+        </p>
+      </div>
+    `;
+    const goBtn = document.getElementById('bizEmailBtn');
+    const emailInput = document.getElementById('bizEmailInput');
+    const go = async ()=>{
+      const email = normalizeEmail(emailInput.value);
+      if(!email || !email.includes('@')){
+        bizGateError = 'Ingresá un email válido.';
+        render();
+        return;
+      }
+      bizGateError = '';
+      goBtn.textContent = 'Verificando...';
+      goBtn.disabled = true;
+      const exists = await businessExists(email);
+      state.bizEmail = email;
+      if(exists){
+        state.bizId = email;
+        state.loaded = false;
+        render();
+        await loadAll();
+        render();
+      } else {
+        bizGateStage = 'newBiz';
+        render();
+      }
+    };
+    goBtn.onclick = go;
+    emailInput.onkeydown = (e)=>{ if(e.key==='Enter') go(); };
+    emailInput.focus();
+    return;
+  }
+
+  if(bizGateStage === 'newBiz'){
+    app.innerHTML = `
+      <div class="login-screen">
+        <h1>Crear negocio nuevo</h1>
+        <p class="sub">No encontramos ningún negocio con ese email, así que vamos a crear uno nuevo para <strong>${state.bizEmail}</strong>.</p>
+        <label>Nombre del negocio</label>
+        <input id="newBizName" placeholder="Ej: Cosmética Bella">
+        <label>Código de acceso del dueño (vos)</label>
+        <input id="newBizOwnerPin" placeholder="Ej: 1234">
+        <label>Código de acceso del empleado</label>
+        <input id="newBizEmployeeCode" placeholder="Ej: 4567">
+        <div class="error-text" id="newBizError" style="display:none;">Completá todos los campos.</div>
+        <button class="btn" id="createBizBtn">Crear negocio</button>
+        <button class="link-btn" id="backToEmailBtn" style="margin-top:8px;">‹ Usar otro email</button>
+      </div>
+    `;
+    document.getElementById('backToEmailBtn').onclick = ()=>{
+      bizGateStage = 'email';
+      bizGateError = '';
+      render();
+    };
+    document.getElementById('createBizBtn').onclick = async ()=>{
+      const name = document.getElementById('newBizName').value.trim();
+      const ownerPin = document.getElementById('newBizOwnerPin').value.trim();
+      const employeeCode = document.getElementById('newBizEmployeeCode').value.trim();
+      if(!name || !ownerPin || !employeeCode){
+        document.getElementById('newBizError').style.display = 'block';
+        return;
+      }
+      state.bizId = state.bizEmail;
+      state.business = { name, whatsapp: '', address: '', instagram: '', tiktok: '', facebook: '', website: '', qrTarget: '' };
+      state.auth = { ownerPin, employeeCode };
+      state.products = [];
+      state.clients = [];
+      state.sales = [];
+      await saveBusiness();
+      await saveAuth();
+      await saveProducts();
+      await saveClients();
+      await saveSales();
+      state.loaded = true;
+      state.role = 'owner';
+      state.tab = 'facturar';
+      document.title = name + ' — Facturación';
+      render();
+      showToast('Negocio creado');
+    };
+  }
+}
+
+function renderLogin(app){
+  app.innerHTML = `
+    <div class="login-screen">
+      <h1>${state.business.name || 'Mi negocio'}</h1>
+      <p class="sub">${state.bizEmail}</p>
+      <div class="role-toggle">
+        <button id="roleOwnerBtn" class="${loginRoleChoice==='owner'?'active':''}">Soy el dueño</button>
+        <button id="roleEmpBtn" class="${loginRoleChoice==='employee'?'active':''}">Soy empleado</button>
+      </div>
+      <label>${loginRoleChoice==='owner' ? 'Código del dueño' : 'Código del empleado'}</label>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="Ingresá tu código" maxlength="12">
+      <div class="error-text" id="loginError" style="display:none;">Código incorrecto.</div>
+      <button class="btn" id="loginBtn">Entrar</button>
+      <button class="link-btn" id="switchBizBtn" style="margin-top:8px;">‹ Usar otro email / otro negocio</button>
+    </div>
+  `;
+  document.getElementById('roleOwnerBtn').onclick = ()=>{ loginRoleChoice='owner'; renderLogin(app); };
+  document.getElementById('roleEmpBtn').onclick = ()=>{ loginRoleChoice='employee'; renderLogin(app); };
+  document.getElementById('switchBizBtn').onclick = ()=>{
+    state.bizId = null;
+    state.bizEmail = null;
+    state.loaded = false;
+    bizGateStage = 'email';
+    bizGateError = '';
+    render();
+  };
+  document.getElementById('loginBtn').onclick = ()=>{
+    const pin = document.getElementById('pinInput').value.trim();
+    const expected = loginRoleChoice==='owner' ? state.auth.ownerPin : state.auth.employeeCode;
+    if(pin === expected){
+      state.role = loginRoleChoice;
+      state.tab = 'facturar';
+      render();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  };
+  document.getElementById('pinInput').onkeydown = (e)=>{
+    if(e.key === 'Enter') document.getElementById('loginBtn').click();
+  };
+}
+let loginRoleChoice = 'owner';
+
+function renderMain(app){
+  const isOwner = state.role === 'owner';
+  let content = '';
+  if(state.tab === 'facturar') content = renderFacturar();
+  else if(state.tab === 'stock') content = renderStock();
+  else if(state.tab === 'clientes') content = renderClientes();
+  else if(state.tab === 'panel' && isOwner) content = renderPanel();
+
+  app.innerHTML = `
+    <header class="topbar">
+      <h1>${state.business.name || 'Mi negocio'}</h1>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="role-pill">${isOwner ? 'Dueño' : 'Empleado'}</span>
+        <button class="link-btn" id="logoutBtn">Salir</button>
+      </div>
+    </header>
+    <main>${content}</main>
+    <nav class="tabbar">
+      <button data-tab="facturar" class="${state.tab==='facturar'?'active':''}"><span class="icon">🧾</span>Facturar</button>
+      <button data-tab="stock" class="${state.tab==='stock'?'active':''}"><span class="icon">📦</span>Stock</button>
+      <button data-tab="clientes" class="${state.tab==='clientes'?'active':''}"><span class="icon">👥</span>Clientes</button>
+      ${isOwner ? `<button data-tab="panel" class="${state.tab==='panel'?'active':''}"><span class="icon">📊</span>Panel</button>` : ''}
+    </nav>
+  `;
+  document.getElementById('logoutBtn').onclick = ()=>{
+    state.role = null;
+    state.cart = [];
+    state.selectedClientId = null;
+    render();
+  };
+  app.querySelectorAll('nav.tabbar button').forEach(b=>{
+    b.onclick = ()=>{ state.tab = b.dataset.tab; render(); };
+  });
+  attachTabHandlers();
+}
+
+// ---------- FACTURAR ----------
+function computeLineTotal(prod, qty, client){
+  const discount = (client && client.discount && !prod.noDiscount) ? client.discount : 0;
+  return { lineTotal: prod.price * qty * (1 - discount/100), discountPercent: discount };
+}
+
+function renderFacturar(){
+  const client = state.clients.find(c=>c.id===state.selectedClientId);
+
+  const cartTotal = state.cart.reduce((sum, line)=>{
+    const prod = state.products.find(p=>p.id===line.productId);
+    if(!prod) return sum;
+    return sum + computeLineTotal(prod, line.qty, client).lineTotal;
+  }, 0);
+
+  const clientOptions = state.clients.map(c=>
+    `<option value="${c.id}" ${state.selectedClientId===c.id?'selected':''}>${c.name} ${c.lastname}${c.discount?` (-${c.discount}%)`:''}</option>`
+  ).join('');
+
+  const cartLines = state.cart.map(line=>{
+    const prod = state.products.find(p=>p.id===line.productId);
+    if(!prod) return '';
+    const { lineTotal, discountPercent } = computeLineTotal(prod, line.qty, client);
+    return `<div class="cart-line">
+      <span>${prod.name} × ${line.qty}${discountPercent ? ` <span class="discount-badge">-${discountPercent}%</span>` : ''}</span>
+      <span style="display:flex; align-items:center; gap:8px;">
+        ${money(lineTotal)}
+        <button class="link-btn" data-remove="${line.productId}" style="color:var(--danger);">Quitar</button>
+      </span>
+    </div>`;
+  }).join('');
+
+  const query = (state.productSearch || '').toLowerCase().trim();
+  const matches = query.length === 0 ? [] : state.products.filter(p=>
+    p.stock > 0 && (
+      p.name.toLowerCase().includes(query) ||
+      (p.barcode && p.barcode.toLowerCase().includes(query))
+    )
+  ).slice(0, 8);
+
+  const searchResults = matches.map(p=>`
+    <div class="search-result-row">
+      <div>
+        <div class="name">${p.name}</div>
+        <div class="meta">stock: ${p.stock} · ${money(p.price)}${p.noDiscount ? ' · <span class="no-discount-badge">sin descuento</span>' : ''}</div>
+      </div>
+      <button class="btn secondary small" data-quickadd="${p.id}">Agregar</button>
+    </div>
+  `).join('');
+
+  const lastSale = state.sales.find(s=>s.id===state.lastSaleId);
+
+  return `
+    ${lastSale ? `
+    <div class="card">
+      <h2>Última venta</h2>
+      <p class="settings-note" style="margin-bottom:10px;">Total: ${money(lastSale.total)}</p>
+      <button class="btn secondary" id="printLastSaleBtn">🖨️ Imprimir ticket</button>
+    </div>` : ''}
+
+    <div class="card">
+      <h2>Buscar producto</h2>
+      <input id="productSearchInput" placeholder="Escribí el nombre del producto..." value="${state.productSearch || ''}">
+      ${query.length > 0 ? `
+        <div class="search-results">
+          ${searchResults || '<p class="empty">No se encontró ningún producto con ese nombre.</p>'}
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="card">
+      <h2>Escanear producto</h2>
+      <label>Código de barras</label>
+      <div class="scan-row">
+        <input id="barcodeInput" placeholder="Escaneá o escribí el código y presioná Enter" inputmode="text">
+        <button class="btn secondary camera-btn" id="openCameraBtn">📷 Cámara</button>
+      </div>
+      <p class="settings-note" style="margin-top:-6px;">
+        Funciona con un lector conectado (USB o Bluetooth) o con la cámara. Si no lo lee, usá el buscador por nombre de arriba.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Cliente</h2>
+      <label>Cliente (opcional, para descuentos personalizados)</label>
+      <select id="clientSelect">
+        <option value="">Sin cliente</option>
+        ${clientOptions}
+      </select>
+      ${state.products.length===0 ? '<p class="empty">Todavía no cargaste productos. Andá a Stock para agregar.</p>' : ''}
+    </div>
+
+    ${state.cart.length>0 ? `
+    <div class="card">
+      <h2>Carrito</h2>
+      ${cartLines}
+      <div class="total-line"><span>Total</span><span>${money(cartTotal)}</span></div>
+      <div style="margin-top:14px;">
+        <button class="btn" id="confirmSaleBtn">Confirmar venta y facturar</button>
+        <button class="btn secondary" id="clearCartBtn" style="margin-top:8px;">Vaciar carrito</button>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function facturarHandlers(){
+  const searchInput = document.getElementById('productSearchInput');
+  if(searchInput){
+    searchInput.oninput = (e)=>{
+      state.productSearch = e.target.value;
+      render();
+      const el = document.getElementById('productSearchInput');
+      if(el){ el.focus(); el.selectionStart = el.selectionEnd = el.value.length; }
+    };
+  }
+  document.querySelectorAll('[data-quickadd]').forEach(b=>{
+    b.onclick = ()=>{
+      const prod = state.products.find(p=>p.id===b.dataset.quickadd);
+      if(prod && addProductToCart(prod.id, 1)){
+        showToast(prod.name + ' agregado');
+        state.productSearch = '';
+        render();
+      }
+    };
+  });
+
+  const printBtn = document.getElementById('printLastSaleBtn');
+  if(printBtn) printBtn.onclick = ()=>{
+    const sale = state.sales.find(s=>s.id===state.lastSaleId);
+    printReceipt(sale);
+  };
+
+  const barcodeInput = document.getElementById('barcodeInput');
+  if(barcodeInput){
+    barcodeInput.onkeydown = (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        const code = barcodeInput.value.trim();
+        barcodeInput.value = '';
+        if(!code) return;
+        const prod = findProductByBarcode(code);
+        if(!prod){ showToast('No se encontró ningún producto con ese código. Probá buscarlo por nombre.'); return; }
+        if(prod.stock <= 0){ showToast(prod.name + ' no tiene stock'); return; }
+        if(addProductToCart(prod.id, 1)){
+          showToast(prod.name + ' agregado');
+          render();
+        }
+      }
+    };
+  }
+  const openCameraBtn = document.getElementById('openCameraBtn');
+  if(openCameraBtn) openCameraBtn.onclick = openBarcodeScanner;
+
+  const clientSelect = document.getElementById('clientSelect');
+  if(clientSelect) clientSelect.onchange = (e)=>{
+    state.selectedClientId = e.target.value || null;
+    render();
+  };
+  document.querySelectorAll('[data-remove]').forEach(b=>{
+    b.onclick = ()=>{
+      state.cart = state.cart.filter(l=>l.productId !== b.dataset.remove);
+      render();
+    };
+  });
+  const clearBtn = document.getElementById('clearCartBtn');
+  if(clearBtn) clearBtn.onclick = ()=>{ state.cart = []; render(); };
+  const confirmBtn = document.getElementById('confirmSaleBtn');
+  if(confirmBtn) confirmBtn.onclick = async ()=>{
+    const client = state.clients.find(c=>c.id===state.selectedClientId);
+    let total = 0;
+    const items = state.cart.map(line=>{
+      const prod = state.products.find(p=>p.id===line.productId);
+      const { lineTotal, discountPercent } = computeLineTotal(prod, line.qty, client);
+      total += lineTotal;
+      return { productId: prod.id, name: prod.name, qty: line.qty, unitPrice: prod.price, discountPercent };
+    });
+    for(const line of state.cart){
+      const prod = state.products.find(p=>p.id===line.productId);
+      prod.stock -= line.qty;
+    }
+    const sale = {
+      id: uid(),
+      date: new Date().toISOString(),
+      items,
+      total,
+      clientId: state.selectedClientId || null,
+      role: state.role,
+    };
+    state.sales.push(sale);
+    state.lastSaleId = sale.id;
+    await saveProducts();
+    await saveSales();
+    state.cart = [];
+    state.selectedClientId = null;
+    state.productSearch = '';
+    render();
+    showToast('Venta registrada y facturada');
+  };
+}
+
+// ---------- ESCÁNER POR CÁMARA ----------
+let scannerStream = null;
+let scannerLoopId = null;
+
+async function openBarcodeScanner(options){
+  options = options || {};
+  const mode = options.mode || 'sell';
+  if(!('BarcodeDetector' in window)){
+    showToast('Tu navegador no soporta escaneo por cámara. Usá un lector físico o cargá el código a mano.');
+    return;
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'scanner-overlay';
+  overlay.innerHTML = `
+    <div class="scanner-box">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <div class="scanner-footer">
+        <p class="scanner-status" id="scannerStatus">Apuntá la cámara al código de barras</p>
+        <button class="btn secondary" id="closeScannerBtn">Cerrar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('closeScannerBtn').onclick = closeBarcodeScanner;
+
+  try{
+    scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  }catch(e){
+    showToast('No se pudo acceder a la cámara. Revisá los permisos.');
+    closeBarcodeScanner();
+    return;
+  }
+  const video = document.getElementById('scannerVideo');
+  video.srcObject = scannerStream;
+
+  const detector = new BarcodeDetector({
+    formats: ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']
+  });
+
+  const scanFrame = async ()=>{
+    if(!scannerStream) return;
+    try{
+      const codes = await detector.detect(video);
+      if(codes.length > 0){
+        const value = codes[0].rawValue;
+        if(mode === 'capture'){
+          if(options.onResult) options.onResult(value);
+          showToast('Código capturado: ' + value);
+          closeBarcodeScanner();
+          return;
+        }
+        const prod = findProductByBarcode(value);
+        const statusEl = document.getElementById('scannerStatus');
+        if(prod){
+          if(prod.stock <= 0){
+            if(statusEl) statusEl.textContent = prod.name + ' no tiene stock';
+          } else if(addProductToCart(prod.id, 1)){
+            showToast(prod.name + ' agregado');
+            closeBarcodeScanner();
+            render();
+            return;
+          }
+        } else {
+          if(statusEl) statusEl.textContent = 'Código ' + value + ' no coincide con ningún producto';
+        }
+      }
+    }catch(e){}
+    scannerLoopId = requestAnimationFrame(scanFrame);
+  };
+  scannerLoopId = requestAnimationFrame(scanFrame);
+}
+
+function closeBarcodeScanner(){
+  if(scannerLoopId) cancelAnimationFrame(scannerLoopId);
+  scannerLoopId = null;
+  if(scannerStream){
+    scannerStream.getTracks().forEach(t=>t.stop());
+    scannerStream = null;
+  }
+  const overlay = document.querySelector('.scanner-overlay');
+  if(overlay) overlay.remove();
+}
+
+// ---------- STOCK ----------
+function renderStock(){
+  const items = state.products.map(p=>`
+    <div class="list-item">
+      <div>
+        <div class="name">${p.name}</div>
+        <div class="meta">${money(p.price)} · stock: ${p.stock}${p.barcode ? ' · código: ' + p.barcode : ''}${p.category ? ' · ' + p.category : ''}${p.noDiscount ? ' · <span class="no-discount-badge">sin descuento</span>' : ''}</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" data-dec="${p.id}">−</button>
+        <span>${p.stock}</span>
+        <button class="qty-btn" data-inc="${p.id}">+</button>
+        <button class="link-btn" data-del="${p.id}" style="color:var(--danger);">Borrar</button>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="card">
+      <h2>Agregar producto</h2>
+      <label>Nombre</label>
+      <input id="newProdName" placeholder="Ej: Coca cola 500ml">
+      <div class="row">
+        <div>
+          <label>Precio de venta</label>
+          <input id="newProdPrice" type="number" min="0" placeholder="0">
+        </div>
+        <div>
+          <label>Stock inicial</label>
+          <input id="newProdStock" type="number" min="0" placeholder="0">
+        </div>
+      </div>
+      <label>Categoría (opcional)</label>
+      <input id="newProdCategory" placeholder="Ej: Bebidas, Almacén, Limpieza">
+      <label>Código de barras (opcional)</label>
+      <div class="scan-row">
+        <input id="newProdBarcode" placeholder="Escaneá o escribí el código">
+        <button class="btn secondary camera-btn" id="scanNewProdBtn">📷</button>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="newProdNoDiscount">
+        <label for="newProdNoDiscount">No aplican descuentos generales de clientes a este producto</label>
+      </div>
+      <button class="btn" id="addProdBtn">Agregar producto</button>
+    </div>
+    <div class="card">
+      <h2>Productos (${state.products.length})</h2>
+      ${items || '<p class="empty">Todavía no hay productos cargados.</p>'}
+    </div>
+  `;
+}
+
+function stockHandlers(){
+  const addBtn = document.getElementById('addProdBtn');
+  if(addBtn) addBtn.onclick = async ()=>{
+    const name = document.getElementById('newProdName').value.trim();
+    const price = parseFloat(document.getElementById('newProdPrice').value);
+    const stock = parseInt(document.getElementById('newProdStock').value, 10);
+    const barcode = document.getElementById('newProdBarcode').value.trim();
+    const category = document.getElementById('newProdCategory').value.trim();
+    const noDiscount = document.getElementById('newProdNoDiscount').checked;
+    if(!name){ showToast('Ingresá un nombre de producto'); return; }
+    if(isNaN(price) || price < 0){ showToast('Ingresá un precio válido'); return; }
+    if(isNaN(stock) || stock < 0){ showToast('Ingresá un stock válido'); return; }
+    if(barcode && state.products.some(p=>p.barcode === barcode)){
+      showToast('Ese código de barras ya está asignado a otro producto');
+      return;
+    }
+    state.products.push({ id: uid(), name, price, stock, barcode: barcode || null, category: category || null, noDiscount });
+    await saveProducts();
+    render();
+    showToast('Producto agregado');
+  };
+  const scanNewProdBtn = document.getElementById('scanNewProdBtn');
+  if(scanNewProdBtn) scanNewProdBtn.onclick = ()=>{
+    openBarcodeScanner({ mode: 'capture', onResult: (code)=>{
+      const input = document.getElementById('newProdBarcode');
+      if(input) input.value = code;
+    }});
+  };
+  document.querySelectorAll('[data-inc]').forEach(b=>{
+    b.onclick = async ()=>{
+      const p = state.products.find(x=>x.id===b.dataset.inc);
+      p.stock += 1;
+      await saveProducts();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-dec]').forEach(b=>{
+    b.onclick = async ()=>{
+      const p = state.products.find(x=>x.id===b.dataset.dec);
+      if(p.stock > 0) p.stock -= 1;
+      await saveProducts();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = async ()=>{
+      state.products = state.products.filter(x=>x.id !== b.dataset.del);
+      await saveProducts();
+      render();
+      showToast('Producto eliminado');
+    };
+  });
+}
+
+// ---------- CLIENTES ----------
+let openComposeClientId = null;
+
+function renderClientes(){
+  const items = state.clients.map(c=>{
+    const isComposing = openComposeClientId === c.id;
+    return `
+    <div>
+      <div class="list-item">
+        <div>
+          <div class="name">${c.name} ${c.lastname}</div>
+          <div class="meta">DNI: ${c.dni || '-'}${c.phone ? ' · ' + c.phone : ''} ${c.discount ? `<span class="discount-badge">-${c.discount}%</span>` : ''}</div>
+        </div>
+        <div class="contact-icons">
+          <button class="icon-btn" data-msg="${c.id}" aria-label="Enviar mensaje" title="Enviar promoción">💬</button>
+          <button class="link-btn" data-delc="${c.id}" style="color:var(--danger);">Borrar</button>
+        </div>
+      </div>
+      ${isComposing ? `
+        <div class="promo-compose">
+          <textarea id="composeText-${c.id}" placeholder="Escribí el mensaje de la promoción...">Hola ${c.name}, te contamos que tenemos una promoción especial para vos. ¡Te esperamos!</textarea>
+          <div class="row">
+            <button class="btn secondary" data-sendwa="${c.id}" ${!c.phone ? 'disabled' : ''}>📱 WhatsApp</button>
+            <button class="btn secondary" data-sendmail="${c.id}" ${!c.email ? 'disabled' : ''}>✉️ Email</button>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  }).join('');
+
+  const upcoming = getUpcomingSpecialDates(14);
+  const upcomingList = upcoming.map(u=>`
+    <div class="list-item">
+      <div>
+        <div class="name">${u.client.name} ${u.client.lastname} — ${u.type}</div>
+        <div class="meta">${u.days === 0 ? 'Es hoy' : u.days === 1 ? 'Es mañana' : `En ${u.days} días`}</div>
+      </div>
+      <div class="contact-icons">
+        <button class="icon-btn" data-bwa="${u.client.id}" aria-label="Enviar descuento por WhatsApp" title="WhatsApp" ${!u.client.phone ? 'disabled' : ''}>📱</button>
+        <button class="icon-btn" data-bmail="${u.client.id}" aria-label="Enviar descuento por email" title="Email" ${!u.client.email ? 'disabled' : ''}>✉️</button>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="card">
+      <h2>Registrar cliente</h2>
+      <div class="row">
+        <div>
+          <label>Nombre</label>
+          <input id="cliName" placeholder="Nombre">
+        </div>
+        <div>
+          <label>Apellido</label>
+          <input id="cliLastname" placeholder="Apellido">
+        </div>
+      </div>
+      <label>DNI</label>
+      <input id="cliDni" placeholder="Ej: 30123456" inputmode="numeric">
+      <label>Teléfono (con código de área, para WhatsApp)</label>
+      <input id="cliPhone" placeholder="Ej: 5491123456789" inputmode="tel">
+      <label>Email (opcional)</label>
+      <input id="cliEmail" placeholder="cliente@correo.com" type="email">
+      <label>Descuento habitual (%)</label>
+      <input id="cliDiscount" type="number" min="0" max="100" placeholder="0">
+      <div class="row">
+        <div>
+          <label>Cumpleaños (opcional)</label>
+          <input id="cliBirthday" type="date">
+        </div>
+        <div>
+          <label>Fecha especial (opcional)</label>
+          <input id="cliSpecialDate" type="date">
+        </div>
+      </div>
+      <label>Motivo de la fecha especial (ej: aniversario)</label>
+      <input id="cliSpecialLabel" placeholder="Ej: aniversario de socio">
+      <button class="btn" id="addCliBtn">Registrar cliente</button>
+    </div>
+    <div class="card">
+      <h2>Clientes (${state.clients.length})</h2>
+      ${items || '<p class="empty">Todavía no hay clientes registrados.</p>'}
+    </div>
+    ${upcoming.length > 0 ? `
+    <div class="card">
+      <h2>Fechas especiales próximas</h2>
+      ${upcomingList}
+    </div>` : ''}
+    <div class="card">
+      <h2>Crear promoción</h2>
+      <div class="row">
+        <div>
+          <label>Producto en promoción (opcional)</label>
+          <input id="promoProduct" placeholder="Ej: Coca cola 500ml">
+        </div>
+        <div>
+          <label>Descuento (%)</label>
+          <input id="promoDiscount" type="number" min="0" max="100" placeholder="15">
+        </div>
+      </div>
+      <button class="btn secondary" id="generatePromoBtn" style="margin-bottom:12px;">Generar mensaje</button>
+      <label>Mensaje a enviar</label>
+      <textarea id="bulkPromoText" placeholder="Escribí el mensaje de la promoción...">¡Hola! Tenemos una promoción especial esta semana. Te esperamos en el local.</textarea>
+      <label>Elegí a quién enviarle (no se envía a todos automáticamente)</label>
+      <p class="settings-note" style="margin:-6px 0 10px;">
+        Cada envío por WhatsApp abre una conversación individual desde tu propio WhatsApp. No hay forma gratuita de mandarlo a todos con un solo clic.
+      </p>
+      <div class="checkbox-row">
+        <input type="checkbox" id="selectAllClients">
+        <label for="selectAllClients">Seleccionar todos</label>
+      </div>
+      ${state.clients.length === 0 ? '<p class="empty">Todavía no hay clientes registrados.</p>' : state.clients.map(c=>`
+        <div class="list-item">
+          <div class="checkbox-row" style="margin:0;">
+            <input type="checkbox" class="promo-check" data-promocheck="${c.id}" ${state.promoSelectedIds.includes(c.id) ? 'checked' : ''}>
+            <label style="font-weight:400;">${c.name} ${c.lastname}</label>
+          </div>
+          ${state.promoSelectedIds.includes(c.id) ? `
+            <div class="contact-icons">
+              <button class="icon-btn" data-bulkwa="${c.id}" ${!c.phone ? 'disabled' : ''} title="Enviar por WhatsApp">📱</button>
+              <button class="icon-btn" data-bulkmail="${c.id}" ${!c.email ? 'disabled' : ''} title="Enviar por email">✉️</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function clientesHandlers(){
+  const addBtn = document.getElementById('addCliBtn');
+  if(addBtn) addBtn.onclick = async ()=>{
+    const name = document.getElementById('cliName').value.trim();
+    const lastname = document.getElementById('cliLastname').value.trim();
+    const dni = document.getElementById('cliDni').value.trim();
+    const phone = document.getElementById('cliPhone').value.trim();
+    const email = document.getElementById('cliEmail').value.trim();
+    const discount = parseFloat(document.getElementById('cliDiscount').value) || 0;
+    const birthday = document.getElementById('cliBirthday').value || null;
+    const specialDate = document.getElementById('cliSpecialDate').value || null;
+    const specialLabel = document.getElementById('cliSpecialLabel').value.trim() || null;
+    if(!name || !lastname){ showToast('Ingresá nombre y apellido'); return; }
+    state.clients.push({ id: uid(), name, lastname, dni, phone, email, discount, birthday, specialDate, specialLabel });
+    await saveClients();
+    render();
+    showToast('Cliente registrado');
+  };
+  document.querySelectorAll('[data-delc]').forEach(b=>{
+    b.onclick = async ()=>{
+      state.clients = state.clients.filter(x=>x.id !== b.dataset.delc);
+      state.promoSelectedIds = state.promoSelectedIds.filter(id=>id !== b.dataset.delc);
+      await saveClients();
+      render();
+      showToast('Cliente eliminado');
+    };
+  });
+  document.querySelectorAll('[data-msg]').forEach(b=>{
+    b.onclick = ()=>{
+      openComposeClientId = openComposeClientId === b.dataset.msg ? null : b.dataset.msg;
+      render();
+    };
+  });
+  document.querySelectorAll('[data-sendwa]').forEach(b=>{
+    b.onclick = ()=>{
+      const client = state.clients.find(c=>c.id===b.dataset.sendwa);
+      const text = document.getElementById('composeText-' + b.dataset.sendwa).value;
+      openWhatsappTo(client.phone, text);
+    };
+  });
+  document.querySelectorAll('[data-sendmail]').forEach(b=>{
+    b.onclick = ()=>{
+      const client = state.clients.find(c=>c.id===b.dataset.sendmail);
+      const text = document.getElementById('composeText-' + b.dataset.sendmail).value;
+      openEmailTo(client.email, state.business.name + ' — promoción', text);
+    };
+  });
+
+  // Fechas especiales: envío rápido
+  document.querySelectorAll('[data-bwa]').forEach(b=>{
+    b.onclick = ()=>{
+      const client = state.clients.find(c=>c.id===b.dataset.bwa);
+      openWhatsappTo(client.phone, birthdayMessage(client));
+    };
+  });
+  document.querySelectorAll('[data-bmail]').forEach(b=>{
+    b.onclick = ()=>{
+      const client = state.clients.find(c=>c.id===b.dataset.bmail);
+      openEmailTo(client.email, state.business.name + ' — ¡te tenemos un regalo!', birthdayMessage(client));
+    };
+  });
+
+  // Crear promoción
+  const generatePromoBtn = document.getElementById('generatePromoBtn');
+  if(generatePromoBtn) generatePromoBtn.onclick = ()=>{
+    const product = document.getElementById('promoProduct').value.trim();
+    const discount = document.getElementById('promoDiscount').value.trim();
+    let msg = '¡Hola! Tenemos una promoción especial';
+    if(product && discount) msg = `¡Hola! Tenemos ${discount}% de descuento en ${product} esta semana. ¡Te esperamos!`;
+    else if(discount) msg = `¡Hola! Tenemos ${discount}% de descuento esta semana. ¡Te esperamos!`;
+    else if(product) msg = `¡Hola! Tenemos una promoción especial en ${product}. ¡Te esperamos!`;
+    document.getElementById('bulkPromoText').value = msg;
+  };
+  const selectAll = document.getElementById('selectAllClients');
+  if(selectAll) selectAll.onchange = (e)=>{
+    state.promoSelectedIds = e.target.checked ? state.clients.map(c=>c.id) : [];
+    render();
+  };
+  document.querySelectorAll('[data-promocheck]').forEach(b=>{
+    b.onchange = (e)=>{
+      const id = b.dataset.promocheck;
+      if(e.target.checked){
+        if(!state.promoSelectedIds.includes(id)) state.promoSelectedIds.push(id);
+      } else {
+        state.promoSelectedIds = state.promoSelectedIds.filter(x=>x!==id);
+      }
+      render();
+    };
+  });
+  document.querySelectorAll('[data-bulkwa]').forEach(b=>{
+    b.onclick = ()=>{
+      const client = state.clients.find(c=>c.id===b.dataset.bulkwa);
+      const text = document.getElementById('bulkPromoText').value;
+      openWhatsappTo(client.phone, text);
+    };
+  });
+  document.querySelectorAll('[data-bulkmail]').forEach(b=>{
+    b.onclick = ()=>{
+      const client = state.clients.find(c=>c.id===b.dataset.bulkmail);
+      const text = document.getElementById('bulkPromoText').value;
+      openEmailTo(client.email, state.business.name + ' — promoción', text);
+    };
+  });
+}
+
+// ---------- PANEL (solo dueño) ----------
+function renderPanel(){
+  const today = todayStr();
+  const month = monthStr();
+  const salesToday = state.sales.filter(s=>todayStr(s.date)===today);
+  const salesMonth = state.sales.filter(s=>monthStr(s.date)===month);
+  const totalToday = salesToday.reduce((sum,s)=>sum+s.total,0);
+  const totalMonth = salesMonth.reduce((sum,s)=>sum+s.total,0);
+
+  const recentSales = [...state.sales].reverse().slice(0,10).map(s=>{
+    const client = state.clients.find(c=>c.id===s.clientId);
+    const d = new Date(s.date);
+    const itemsText = s.items.map(i=>`${i.name} ×${i.qty}`).join(', ');
+    return `<div class="list-item">
+      <div>
+        <div class="name">${money(s.total)} ${client ? '· ' + client.name + ' ' + client.lastname : ''}</div>
+        <div class="meta">${d.toLocaleDateString('es-AR')} ${d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})} — ${itemsText}</div>
+      </div>
+      <button class="link-btn" data-reprint="${s.id}">Imprimir</button>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="card">
+      <h2>Resumen de ventas</h2>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="label">Hoy</div>
+          <div class="value">${money(totalToday)}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Este mes</div>
+          <div class="value">${money(totalMonth)}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Últimas ventas</h2>
+      ${recentSales || '<p class="empty">Todavía no hay ventas registradas.</p>'}
+    </div>
+    <div class="card">
+      <h2>Datos del negocio</h2>
+      <label>Nombre del negocio (aparece en toda la app y en el ticket)</label>
+      <input id="bizNameInput" value="${state.business.name || ''}">
+      <label>Dirección (aparece en el ticket)</label>
+      <input id="bizAddressInput" value="${state.business.address || ''}" placeholder="Ej: Av. Siempre Viva 742">
+      <label>WhatsApp del negocio</label>
+      <input id="bizWaInput" value="${state.business.whatsapp || ''}" placeholder="Ej: 5491123456789">
+      <label>Instagram (link completo)</label>
+      <input id="bizInstaInput" value="${state.business.instagram || ''}" placeholder="https://instagram.com/tu_negocio">
+      <label>TikTok (link completo)</label>
+      <input id="bizTiktokInput" value="${state.business.tiktok || ''}" placeholder="https://tiktok.com/@tu_negocio">
+      <label>Facebook (link completo)</label>
+      <input id="bizFacebookInput" value="${state.business.facebook || ''}" placeholder="https://facebook.com/tu_negocio">
+      <label>Sitio web (link completo)</label>
+      <input id="bizWebsiteInput" value="${state.business.website || ''}" placeholder="https://tunegocio.com">
+      <label>El código QR del ticket redirige a</label>
+      <select id="bizQrTargetInput">
+        <option value="instagram" ${state.business.qrTarget==='instagram'?'selected':''}>Instagram</option>
+        <option value="tiktok" ${state.business.qrTarget==='tiktok'?'selected':''}>TikTok</option>
+        <option value="facebook" ${state.business.qrTarget==='facebook'?'selected':''}>Facebook</option>
+        <option value="website" ${state.business.qrTarget==='website'?'selected':''}>Sitio web</option>
+        <option value="whatsapp" ${state.business.qrTarget==='whatsapp'?'selected':''}>WhatsApp</option>
+      </select>
+      <button class="btn secondary" id="saveBizBtn">Guardar datos del negocio</button>
+      <p class="settings-note" style="margin-top:10px;">
+        El QR se genera con un servicio gratuito al momento de imprimir, así la app se mantiene liviana. Necesita conexión a internet en ese momento.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Copia de seguridad y traspaso entre dispositivos</h2>
+      <p class="settings-note" style="margin-bottom:10px;">
+        Los datos se guardan solo en este dispositivo y este navegador. Para pasarlos a otro celular o compu (por ejemplo, al de un empleado), exportá un archivo acá y luego importalo del otro lado.
+      </p>
+      <button class="btn secondary" id="exportBtn" style="margin-bottom:10px;">⬇️ Exportar datos de este negocio</button>
+      <label>Importar backup (reemplaza los datos actuales de este negocio)</label>
+      <input type="file" id="importFileInput" accept="application/json">
+    </div>
+    <div class="card">
+      <h2>Seguridad</h2>
+      <p class="settings-note" style="margin-bottom:10px;">Negocio: ${state.bizEmail}</p>
+      <label>Código del dueño</label>
+      <input id="ownerPinInput" value="${state.auth.ownerPin}">
+      <label>Código del empleado</label>
+      <input id="empPinInput" value="${state.auth.employeeCode}">
+      <button class="btn secondary" id="savePinsBtn">Guardar códigos</button>
+      <p class="settings-note" style="margin-top:10px;">
+        El código de empleado da acceso a Facturar, Stock y Clientes, pero no a este Panel ni a los totales de venta. Compartiselo solo a la gente que trabaja en este negocio puntual — para otro rubro, usá otro email y otro negocio.
+      </p>
+    </div>
+  `;
+}
+
+function panelHandlers(){
+  const exportBtn = document.getElementById('exportBtn');
+  if(exportBtn) exportBtn.onclick = exportBusinessData;
+  const importInput = document.getElementById('importFileInput');
+  if(importInput) importInput.onchange = (e)=>{
+    const file = e.target.files[0];
+    if(file) importBusinessData(file);
+  };
+  const saveBtn = document.getElementById('savePinsBtn');
+  if(saveBtn) saveBtn.onclick = async ()=>{
+    const ownerPin = document.getElementById('ownerPinInput').value.trim();
+    const empCode = document.getElementById('empPinInput').value.trim();
+    if(!ownerPin || !empCode){ showToast('Completá ambos códigos'); return; }
+    state.auth.ownerPin = ownerPin;
+    state.auth.employeeCode = empCode;
+    await saveAuth();
+    showToast('Códigos actualizados');
+  };
+  const saveBizBtn = document.getElementById('saveBizBtn');
+  if(saveBizBtn) saveBizBtn.onclick = async ()=>{
+    state.business.name = document.getElementById('bizNameInput').value.trim() || 'Mi negocio';
+    state.business.whatsapp = document.getElementById('bizWaInput').value.trim();
+    await saveBusiness();
+    showToast('Datos del negocio guardados');
+  };
+  document.querySelectorAll('[data-reprint]').forEach(b=>{
+    b.onclick = ()=>{
+      const sale = state.sales.find(s=>s.id===b.dataset.reprint);
+      printReceipt(sale);
+    };
+  });
+}
+
+function attachTabHandlers(){
+  if(state.tab === 'facturar') facturarHandlers();
+  else if(state.tab === 'stock') stockHandlers();
+  else if(state.tab === 'clientes') clientesHandlers();
+  else if(state.tab === 'panel') panelHandlers();
+}
+
+(function init(){
+  render();
+})();
+</script>
+</body>
+</html>
